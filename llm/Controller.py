@@ -1,10 +1,12 @@
 from pydantic import BaseModel
 from typing import Literal
 from llm.apis.ollama_model import OllamaModel
+from llm.apis.gemini_models import GeminiModel
+from llm.apis.output_schema import LLMOutputSchema
 
 class LLMController(BaseModel):
     model_id: str
-    llm_service : Literal["ollama"] = "ollama"
+    llm_service : Literal["ollama",'gemini'] = "ollama"
     user_prompt: str = ""
     system_prompt: str = "You are a helpful assistant."
     temperature: float = 0.7
@@ -17,7 +19,7 @@ class LLMController(BaseModel):
     
     
     
-    def forward_call(self):
+    def forward_call(self) -> LLMOutputSchema:
         response_object = None
         
     
@@ -35,11 +37,35 @@ class LLMController(BaseModel):
                 vision_images= self.vision_images
             )
             response_object = ollama_call() 
-                   
         
-        return response_object
+        elif self.llm_service == "gemini": 
+            gemini_call = GeminiModel(
+                model_id=self.model_id,
+                user_prompt=self.user_prompt,
+                system_prompt=self.system_prompt,
+                temperature=self.temperature,
+                max_output_token=self.max_output_token,
+                top_p=self.top_p,
+                top_k=self.top_k,
+                extra_params=self.extra_params,
+                enable_vision= self.enable_vision,
+                vision_images= self.vision_images
+            )
+            response_object = gemini_call()
+              
+        if response_object:
+            return response_object
+    
+        return LLMOutputSchema(
+            model_name=self.model_id,
+            response = "No response from model",
+            input_tokens=0,
+            output_tokens=0,
+            status="error"
+            
+        )
     
     
-    def __call__(self):
-        print("Calling LLMController with model_id:", self.model_id)
+    def __call__(self) -> LLMOutputSchema:
+
         return self.forward_call()

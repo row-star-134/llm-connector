@@ -18,7 +18,7 @@ class BaseAPI(BaseModel):
         raise NotImplementedError("This method should be implemented by subclasses.")
    
     
-    def prepare_prompt(self):
+    def prepare_arguments(self):
         
         raise NotImplementedError("This method should be implemented by subclasses.")
    
